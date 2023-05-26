@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.i(LOG_TAG, "test here");
-                RNetDiagnostics.helloasync(callback);
+                RNetDiagnostics.traceroute(callback);
             }
         });
 

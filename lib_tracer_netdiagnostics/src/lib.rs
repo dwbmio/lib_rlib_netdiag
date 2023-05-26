@@ -86,25 +86,25 @@ pub mod android {
     use netdiag::{anyhow::anyhow, tokio, trace::Node, Bind, Tracer};
     use std::sync::mpsc;
 
-    #[no_mangle]
-    pub unsafe extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_greeting(
-        mut env: JNIEnv,
-        _: JClass,
-        java_pattern: JString,
-    ) -> jstring {
-        let c_string = CString::new("Hello!").expect("CString::new failed");
-        let raw = c_string.into_raw();
-        unsafe {
-            some_extern_function(raw);
-            let c_string = CString::from_raw(raw);
-        }
-        // Retake pointer so that we can use it below and allow memory to be freed when it goes out of scope.
-        let world_ptr = CString::from_raw("test");
-        let output = env
-            .new_string(world_ptr.to_str().unwrap())
-            .expect("Couldn't create java string!");
-        output.to_owned()
-    }
+    // #[no_mangle]
+    // pub unsafe extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_greeting(
+    //     mut env: JNIEnv,
+    //     _: JClass,
+    //     java_pattern: JString,
+    // ) -> jstring {
+    //     let c_string = CString::new("Hello!").expect("CString::new failed");
+    //     let raw = c_string.into_raw();
+    //     unsafe {
+    //         some_extern_function(raw);
+    //         let c_string = CString::from_raw(raw);
+    //     }
+    //     // Retake pointer so that we can use it below and allow memory to be freed when it goes out of scope.
+    //     let world_ptr = CString::from_raw("test");
+    //     let output = env
+    //         .new_string(world_ptr.to_str().unwrap())
+    //         .expect("Couldn't create java string!");
+    //     output.to_owned()
+    // }
 
     #[no_mangle]
     pub extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_helloasync(
@@ -151,7 +151,7 @@ pub mod android {
     /* */
     #[no_mangle]
     pub extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_traceroute(
-        env: JNIEnv,
+        mut env: JNIEnv,
         _class: JClass,
         callback: JObject,
     ) {
@@ -166,6 +166,8 @@ pub mod android {
 
         // let mut handles = Vec::with_capacity(10);
         rt.block_on(rt.spawn(traceroute()));
+        env.call_method(&callback, "perNodeCallback", "(I)V", &[(1 as jint).into()])
+            .unwrap();
     }
 }
 

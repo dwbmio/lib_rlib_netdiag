@@ -11,5 +11,5 @@ public class RNetDiagnostics {
     public static native void helloasync(IRNetCallback callback);
 
     //NetDiagnostics
-    private static native void traceroute(IRNetCallback callback);
+    public static native void traceroute(IRNetCallback callback);
 }
