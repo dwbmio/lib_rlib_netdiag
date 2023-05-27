@@ -13,6 +13,7 @@ use super::reply::{Echo, Node};
 use super::{sock4::Sock4, sock6::Sock6};
 use super::state::{Lease, State};
 
+use log::{debug};
 #[derive(Debug)]
 pub struct Trace {
     pub proto:  Protocol,
@@ -32,7 +33,7 @@ pub struct Tracer {
 impl Tracer {
     pub async fn new(bind: &Bind) -> Result<Self> {
         let state = Arc::new(State::new());
-
+        debug!("TEST HERES-1-1-1-1-");
         let icmp  = Icmp::exec(bind, &state).await?;
         let sock4 = Sock4::new(bind, icmp.icmp4.clone(), state.clone()).await?;
         let sock6 = Sock6::new(bind, icmp.icmp6.clone(), state.clone()).await?;

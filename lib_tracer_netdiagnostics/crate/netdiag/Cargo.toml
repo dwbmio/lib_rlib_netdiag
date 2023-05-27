@@ -18,7 +18,7 @@ log         = "0.4.16"
 parking_lot = "0.12.0"
 rand        = "0.8.5"
 raw-socket  = "0.0.2"
-socket2     = "0.4.4"
+socket2     = "0.5.3"
 
 [dependencies.tokio]
 version     = "1.17.0"

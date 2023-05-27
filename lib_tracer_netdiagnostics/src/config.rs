@@ -11,7 +11,7 @@ pub struct TraceRouteConf {
 }
 
 impl TraceRouteConf {
-    fn new(proto: String, port: u16) -> Self {
+    pub fn new(host: String, proto: String, port: u16) -> Self {
         let mut s = Self::default();
         let proto = match proto.to_uppercase().as_str() {
             "ICMP" => Protocol::ICMP,
@@ -19,6 +19,7 @@ impl TraceRouteConf {
             "UDP" if port > 0 => Protocol::UDP(port),
             _ => Protocol::default(),
         };
+        s.host = host;
         s.proto = proto;
         s
     }

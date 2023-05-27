@@ -29,9 +29,11 @@ impl Icmp {
         let icmp4 = Protocol::icmpv4();
         let icmp6 = Protocol::icmpv6();
 
+        debug!("test here000");
         let icmp4 = Arc::new(RawSocket::new(ipv4, Type::raw(), Some(icmp4))?);
+        debug!("test here------------");
         let icmp6 = Arc::new(RawSocket::new(ipv6, Type::raw(), Some(icmp6))?);
-
+        debug!("test here111");
         icmp4.bind(bind.sa4()).await?;
         icmp6.bind(bind.sa6()).await?;
 

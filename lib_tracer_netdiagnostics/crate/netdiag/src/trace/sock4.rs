@@ -25,11 +25,11 @@ impl Sock4 {
         let ipv4  = Domain::ipv4();
         let tcp   = Protocol::from(IPPROTO_TCP);
         let udp   = Protocol::from(IPPROTO_UDP);
-
+        debug!("TEST HERES000");
         let tcp   = Arc::new(RawSocket::new(ipv4, Type::raw(), Some(tcp))?);
         let udp   = Arc::new(RawSocket::new(ipv4, Type::raw(), Some(udp))?);
         let route = RouteSocket::new(bind.sa4()).await?;
-
+        debug!("TEST HERES");
         tcp.bind(bind.sa4()).await?;
         udp.bind(bind.sa4()).await?;
 
