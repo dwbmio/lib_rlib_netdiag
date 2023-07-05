@@ -1,186 +1,91 @@
 /*
 @Author:bbclient
  */
-
+pub mod android_api;
 pub mod config;
-use futures::{pin_mut, StreamExt};
-use log::LevelFilter;
-use log::{debug, error, info};
-use netdiag::{anyhow::anyhow, tokio, trace::Node, Bind, Tracer};
-use std::collections::HashMap;
-use std::ffi::{CStr, CString};
+pub mod ios_api;
+use futures::future::join_all;
+use log::{error, info};
 use std::net::IpAddr;
-use std::os::raw::c_char;
-use std::{sync::mpsc, thread, time::Duration};
+use std::{io, time::Duration};
+use surge_ping::{Client, IcmpPacket, PingIdentifier, PingSequence};
+use thiserror::Error;
 
-/// Expose the JNI interface for android below
-/// 只有在目标平台是Android的时候才开启 [cfg(target_os="android")
-/// 由于JNI要求驼峰命名，所以要开启 allow(non_snake_case)
-#[cfg(any(target_os = "android", debug_assertions))]
-#[allow(non_snake_case)]
-pub mod android {
+#[derive(Error, Debug)]
+enum NetDiagError {
+    #[error("ping bind loc failed!")]
+    BindError(#[from] surge_ping::SurgeError),
 
-    extern crate android_logger;
-    extern crate jni;
-    extern crate log;
-
-    use super::*;
-    use jni::objects::JClass;
-    use jni::objects::JObject;
-    use jni::objects::JString;
-    use jni::sys::jint;
-    use jni::JNIEnv;
-
-    use android_logger::{Config, FilterBuilder};
-
-    pub fn init_logger() {
-        android_logger::init_once(Config::default().with_min_level(log::Level::Debug));
-        debug!("this is a debug {}", "message1312312312");
-    }
-
-    #[no_mangle]
-    pub extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_init() {
-        init_logger();
-    }
-    
-    pub async fn traceroute(host: String) -> netdiag::anyhow::Result<()> {
-        debug!("12312312312");
-        let conf = config::TraceRouteConf::new(host, "udp".to_owned(), 0);
-        let proto: netdiag::Protocol = conf.proto;
-
-        let addr: String = format!("{}:0", conf.host);
-        debug!("addr is {}, proto:{:?}", addr, proto);
-        let addr: std::net::IpAddr = tokio::net::lookup_host(&addr)
-            .await?
-            .next()
-            .ok_or_else(|| anyhow!("invalid target"))?
-            .ip();
-
-        debug!("tracing {} ({})", conf.host, addr);
-
-        let bind = Bind::default();
-        debug!("bind arrd: {:?}",  bind);
-        let tracer = Tracer::new(&bind).await?;
-        debug!("11111111111");
-        let source = tracer.reserve(proto, addr).await?;
-        debug!("11111111111");
-        let mut done = false;
-        let mut ttl = 1;
-        let mut probe = source.probe()?;
-
-        while !done && ttl <= conf.limit {
-            let mut nodes = HashMap::<IpAddr, Vec<String>>::new();
-
-            let stream = tracer.probe(&mut probe, ttl, Duration::from_millis(conf.expiry));
-            let stream = stream.take(conf.count);
-            pin_mut!(stream);
-
-            while let Some(Ok(node)) = stream.next().await {
-                if let Node::Node(_, ip, rtt, last) = node {
-                    let rtt = format!("{:>0.2?}", rtt);
-                    nodes.entry(ip).or_default().push(rtt);
-                    done = last || ip == addr;
-                }
-
-                tokio::time::sleep(Duration::from_millis(conf.delay)).await;
-            }
-            debug!("nodes: ttl={}, count={}", ttl, conf.count);
-            // env.call_method(&callback, "perNodeCallback", "(I)V", &[(1 as jint).into()])
-            //     .unwrap();
-
-            ttl += 1;
-        }
-        Ok(())
-    }
-
-    #[no_mangle]
-    pub unsafe extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_greeting<'local>(
-        mut env: JNIEnv<'local>,
-        // this is the class that owns our static method. Not going to be used, but
-        // still needs to have an argument slot
-        _class: JClass<'local>,
-        input: JString<'local>,
-    ) -> JString<'local> {
-        let input: String = env
-            .get_string(&input)
-            .expect("Couldn't get java string!")
-            .into();
-
-        // Then we have to create a new java string to return. Again, more info
-        // in the `strings` module.
-        let output = env
-            .new_string(format!("Hello, {}!", input))
-            .expect("Couldn't create java string!");
-        output
-    }
-
-    #[no_mangle]
-    pub extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_helloasync(
-        env: JNIEnv,
-        _class: JClass,
-        callback: JObject,
-    ) {
-        // `JNIEnv` cannot be sent across thread boundaries. To be able to use JNI
-        // functions in other threads, we must first obtain the `JavaVM` interface
-        // which, unlike `JNIEnv` is `Send`.
-        let jvm = env.get_java_vm().unwrap();
-
-        // We need to obtain global reference to the `callback` object before sending
-        // it to the thread, to prevent it from being collected by the GC.
-        let callback = env.new_global_ref(callback).unwrap();
-
-        // Use channel to prevent the Java program to finish before the thread
-        // has chance to start.
-        let (tx, rx) = mpsc::channel();
-
-        let _ = thread::spawn(move || {
-            // Signal that the thread has started.
-            tx.send(()).unwrap();
-
-            // Use the `JavaVM` interface to attach a `JNIEnv` to the current thread.
-            let mut env = jvm.attach_current_thread().unwrap();
-
-            for i in 0..11 {
-                let progress = (i * 10) as jint;
-                // Now we can use all available `JNIEnv` functionality normally.
-                env.call_method(&callback, "perNodeCallback", "(I)V", &[progress.into()])
-                    .unwrap();
-                thread::sleep(Duration::from_millis(100));
-            }
-
-            // The current thread is detached automatically when `env` goes out of scope.
-        });
-
-        // Wait until the thread has started.
-        rx.recv().unwrap();
-    }
-
-    // traceroute
-    /* */
-    #[no_mangle]
-    pub extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_traceroute(
-        mut env: JNIEnv,
-        _class: JClass,
-        callback: JObject,
-    ) {
-        let jvm = env.get_java_vm().unwrap();
-        let callback = env.new_global_ref(callback).unwrap();
-
-        let rt = tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(1)
-            .enable_all()
-            .build()
-            .unwrap();
-
-        // let mut handles = Vec::with_capacity(10);
-        rt.block_on(rt.spawn(async {
-            let ret = traceroute("10.250.15.60".to_string()).await;
-            debug!("result is {:?}", ret);
-        }));
-        env.call_method(&callback, "perNodeCallback", "(I)V", &[(1 as jint).into()])
-            .unwrap();
-    }
+    #[error("ping bind loc failed2!")]
+    Bind2Error(#[from] io::Error),
 }
 
-#[test]
-fn test_mod() {}
+type NetDiagResult = Result<String, NetDiagError>;
+
+// Ping an address 5 times， and print output message（interval 1s）
+async fn ping(client: Client, addr: IpAddr, ping_times: u16) {
+    let payload = [0; 56];
+    let mut pinger = client.pinger(addr, PingIdentifier(rand::random())).await;
+    pinger.timeout(Duration::from_secs(1));
+    let mut interval = tokio::time::interval(Duration::from_secs(1));
+    for idx in 0..ping_times {
+        interval.tick().await;
+        match pinger.ping(PingSequence(idx), &payload).await {
+            Ok((IcmpPacket::V4(packet), dur)) => println!(
+                "No.{}: {} bytes from {}: icmp_seq={} ttl={:?} time={:0.2?}",
+                idx,
+                packet.get_size(),
+                packet.get_source(),
+                packet.get_sequence(),
+                packet.get_ttl(),
+                dur
+            ),
+            Ok((IcmpPacket::V6(packet), dur)) => println!(
+                "No.{}: {} bytes from {}: icmp_seq={} hlim={} time={:0.2?}",
+                idx,
+                packet.get_size(),
+                packet.get_source(),
+                packet.get_sequence(),
+                packet.get_max_hop_limit(),
+                dur
+            ),
+            Err(e) => println!("No.{}: {} ping {}", idx, pinger.host, e),
+        };
+    }
+    println!("[+] {} done.", pinger.host);
+}
+
+async fn ping_allhost(host_list: Vec<&str>, ping_tims: Option<u16>) -> NetDiagResult {
+    let v4_cli = Client::new(&surge_ping::Config::default())?;
+    let v6_cli = Client::new(
+        &surge_ping::Config::builder()
+            .kind(surge_ping::ICMP::V6)
+            .build(),
+    )?;
+    let mut tasks = Vec::new();
+
+    for h in host_list {
+        match h.parse() {
+            Ok(IpAddr::V4(h)) => {
+                tasks.push(tokio::spawn(ping(
+                    v4_cli.clone(),
+                    IpAddr::V4(h),
+                    ping_tims.unwrap_or(2),
+                )));
+            }
+            Ok(IpAddr::V6(h)) => {
+                tasks.push(tokio::spawn(ping(
+                    v6_cli.clone(),
+                    IpAddr::V6(h),
+                    ping_tims.unwrap_or(2),
+                )));
+            }
+            Err(e) => {
+                println!("{} parse to ipaddr error: {}", h, e)
+            }
+        }
+    }
+    join_all(tasks).await;
+    info!("test multi_ping");
+    Ok("()".to_owned())
+}
