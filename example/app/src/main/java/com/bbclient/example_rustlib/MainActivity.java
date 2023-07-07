@@ -1,11 +1,10 @@
 package com.bbclient.example_rustlib;
 
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.util.Log;
 import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.bbclient.example_rustlib.databinding.ActivityMainBinding;
 
@@ -38,6 +37,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void endCallback() {
 
+            }
+
+            @Override
+            public void pingsResult(String ret) {
+                Log.i(LOG_TAG, String.format("-->>>ping result is %s", ret));
             }
         };
         btn.setOnClickListener(new View.OnClickListener() {
