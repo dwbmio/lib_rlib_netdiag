@@ -39,7 +39,6 @@ def rustlib_gen(arch: str = "aarch64-linux-android"):
 
 
 if __name__ == "__main__":
-
     # android default 
     if len(sys.argv) == 1:
         sys.argv.append("android")
