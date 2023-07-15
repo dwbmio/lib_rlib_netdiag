@@ -6,7 +6,7 @@
 如何使用rust开发android应用
 [参照教程](https://juejin.cn/post/7170696817682694152)
 
-
+---
 ## Require 
 
 * netdiag v0.3.0
@@ -14,21 +14,40 @@
 
 支持系统基本信息查询
 
-
+---
 ## Build 
 
----
+===
 * iOS 
 
---- 
-
+===
 * Android 
 >cargo build --target aarch64-linux-android --release \
 >cargo build --target armv7-linux-androideabi --release \
 >cargo build --target i686-linux-android --release
 
+---
+## Test
+
+**Require** 
+* python3
+
+===
+* Android 
+> python gen_examplelib_and.py
+
+会尝试生成lib_tracer_netdiagnostics.so到对应example路径
+
+运行程序点击按钮查看控制台输出！
 
 
+===
+* iOS
+TODO
+
+
+
+---
 ## Usage
 Step1. 
 
@@ -36,8 +55,7 @@ Copy the build result to xcode\gradle project.
 
 And add the dependenceise.
 
-
----
+===
 
 **IMPORTANT**\
 移动平台使用前问题排查！

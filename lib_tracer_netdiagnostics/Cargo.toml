@@ -8,25 +8,28 @@ edition = "2021"
 [dependencies]
 surge-ping = "0.8.0"
 trust-dns-resolver = "0.22.0"
-
 tokio = { version = "1.21.2", features = ["full"] }
 thiserror = "1"
 rand = "0.8.5"
 futures = "0.3.25"
+log = "0.4.17"  # log 
 
-# log 
-log = "0.4.17"
-#[target.'cfg(target_os = "android")'.dependencies]
-android_logger = "0.11"
-
-#[target.'cfg(target_os="android")'.dependencies]
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.13.1"
 jni = { version = "0.21", default-features = false }
 jni-sys = "0.3.0"
 
 
+[target.'cfg(target_os = "ios")'.dependencies]
+oslog = "0.2.0"
 
-#[profile.release]
-#lto = true
+
+
+[profile.release]
+lto = true
+strip = true 
+opt-level = 'z'
+codegen-units = 1
 
 
 [lib]

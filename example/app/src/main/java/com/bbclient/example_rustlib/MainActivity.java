@@ -20,6 +20,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(LOG_TAG, "call init...");
+        RNetDiagnostics.load();
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -28,31 +30,14 @@ public class MainActivity extends AppCompatActivity {
         var btn = binding.getRoot().getChildAt(1);
 
         var callback = new IRNetCallback() {
-
             @Override
-            public void perNodeCallback(int progress) {
-                System.out.println("asyncCallback: thread id = " + Thread.currentThread().getId() + ", progress = " + progress + "%");
-            }
-
-            @Override
-            public void endCallback() {
-
-            }
-
-            @Override
-            public void pingsResult(String ret) {
+            public void pingResult(String ret) {
                 Log.i(LOG_TAG, String.format("-->>>ping result is %s", ret));
             }
         };
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i(LOG_TAG, "call init...");
-                RNetDiagnostics.init();
-                Log.i(LOG_TAG, "call greeting...");
-                var ret = RNetDiagnostics.greeting("from mainactivity");
-                Log.i(LOG_TAG, ret);
-                Log.i(LOG_TAG, "call traceroute...");
                 RNetDiagnostics.ping("www.baidu.com", callback);
             }
         });

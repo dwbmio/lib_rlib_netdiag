@@ -1,8 +1,7 @@
-/*
-@Author:bbclient
- */
+#[macro_use]
+extern crate log;
+
 pub mod android_api;
-pub mod config;
 pub mod ios_api;
 use log::{error, info};
 use std::net::IpAddr;
@@ -10,10 +9,10 @@ use std::{io, time::Duration};
 use surge_ping::{Client, IcmpPacket, PingIdentifier, PingSequence};
 use thiserror::Error;
 use trust_dns_resolver::config::*;
-use trust_dns_resolver::Resolver;
+use trust_dns_resolver::TokioAsyncResolver;
 
 #[derive(Error, Debug)]
-enum NetDiagError {
+pub enum NetDiagError {
     #[error("ping bind loc failed!")]
     BindError(#[from] surge_ping::SurgeError),
 
@@ -25,17 +24,32 @@ enum NetDiagError {
 }
 
 type NetDiagResult = Result<String, NetDiagError>;
+type NetDiaglistResult = Result<Vec<String>, NetDiagError>;
 
-fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
+///domain查询远端ip
+/// ```
+/// use tokio::runtime::Runtime;
+///
+/// let rt = Runtime::new().unwrap();
+/// rt.block_on(aysnc {
+///     let ip = dns_ip("www.baidu.com").await;
+///     
+/// });
+///
+///
+///
+/// ```
+async fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
     // Construct a new Resolver with default configuration options
-    let resolver = Resolver::new(ResolverConfig::default(), ResolverOpts::default())?;
-    let ip = resolver.lookup_ip(domain_addr)?;
+    let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default())?;
+    let ip = resolver.lookup_ip(domain_addr).await?;
     let ip_str = ip.iter().next().and_then(|f| Some(f.to_string()));
     Ok(ip_str)
 }
 
 // Ping an address $ping_tims times， and return output message（interval 1s）
 async fn ping(client: Client, addr: IpAddr, ping_times: u16) -> NetDiagResult {
+    trace!("ping start here");
     let mut ping_ret = String::new();
     let payload = [0; 56];
     let mut pinger = client.pinger(addr, PingIdentifier(rand::random())).await;
@@ -54,6 +68,7 @@ async fn ping(client: Client, addr: IpAddr, ping_times: u16) -> NetDiagResult {
                     packet.get_ttl(),
                     dur
                 );
+                log::debug!("ipv4 value is :{:?}", r);
                 ping_ret += &r;
             }
 
@@ -67,27 +82,36 @@ async fn ping(client: Client, addr: IpAddr, ping_times: u16) -> NetDiagResult {
                     packet.get_max_hop_limit(),
                     dur
                 );
+                log::debug!("ipv6 value is :{:?}", r);
                 ping_ret += &r;
             }
             Err(e) => {
                 let r = format!("No.{}: host ping raise error={}", idx, e.to_string());
+                log::debug!("surge-error value is :{:?}", r);
                 ping_ret += &r;
             }
         };
     }
-    println!("ping result is :{:?}", ping_ret);
-    Ok(format!("[+] {} done.", pinger.host))
+    Ok(format!("{} \n[+] {} done.", ping_ret, pinger.host))
 }
 
 ///
 /// ping一组目标地址，获取目标地址的联通性
 /// 优先匹配ip, 匹配ip失败尝试dns解domain看是否有可用ip，还没有就直接标记地址ping失败
 ///
-/// ```rust
-/// let c = 1;
-/// info!("tett comment in test ")
 /// ```
-async fn ping_allhost(host_list: Vec<&str>, ping_tims: Option<u16>) -> NetDiagResult {
+/// use log::{info};
+/// use tracer_netdiagnostics::ping_allhost;
+/// use tokio::runtime::Runtime;
+///
+/// let rt = Runtime::new().unwrap();
+/// rt.block_on(async {
+/// let ret = ping_allhost(vec!["10.250.15.60"], Some(3)).await;
+/// println!("test result is :{:?}", ret);
+/// info!("tett comment in test ");
+/// });
+/// ```
+pub async fn ping_allhost(host_list: Vec<&str>, ping_tims: Option<u16>) -> NetDiaglistResult {
     let v4_cli = Client::new(&surge_ping::Config::default())?;
     let v6_cli = Client::new(
         &surge_ping::Config::builder()
@@ -95,49 +119,42 @@ async fn ping_allhost(host_list: Vec<&str>, ping_tims: Option<u16>) -> NetDiagRe
             .build(),
     )?;
     let mut tasks = Vec::new();
-
+    info!("test task start...");
     for h in host_list {
         match h.parse() {
             Ok(IpAddr::V4(h)) => {
-                tasks.push(tokio::spawn(ping(
-                    v4_cli.clone(),
-                    IpAddr::V4(h),
-                    ping_tims.unwrap_or(2),
-                )));
+                debug!("v4 start...");
+                tasks.push(ping(v4_cli.clone(), IpAddr::V4(h), ping_tims.unwrap_or(2)));
             }
             Ok(IpAddr::V6(h)) => {
-                tasks.push(tokio::spawn(ping(
-                    v6_cli.clone(),
-                    IpAddr::V6(h),
-                    ping_tims.unwrap_or(2),
-                )));
+                debug!("v6 start...");
+                tasks.push(ping(v6_cli.clone(), IpAddr::V6(h), ping_tims.unwrap_or(2)));
             }
             Err(_e) => {
+                debug!("domain");
                 //try as dns like to get ip first.
-                let ip = dns_ip(h)?;
+                let ip = dns_ip(h).await?;
                 if let Some(ip_str) = ip {
                     info!("lookup is value is {:?}", ip_str);
-                    tasks.push(tokio::spawn(ping(
+                    tasks.push(ping(
                         v4_cli.clone(),
                         ip_str.parse().expect("SYNTACTIC-SUGAR"),
                         ping_tims.unwrap_or(2),
-                    )));
+                    ));
                 }
             }
         }
     }
-    futures::future::join_all(tasks).await;
-    Ok("()".to_owned())
-}
+    let mut ping_result: Vec<String> = vec![];
+    let mut ret = futures::future::join_all(tasks).await;
 
-#[test]
-fn test_dnsdomain() {
-    let ip = dns_ip("www.baidu.com");
-    println!("dns domain result  is :{:?}", ip);
-}
+    for el in ret.iter_mut() {
+        if let Ok(e) = el {
+            ping_result.push(e.to_owned());
+            continue;
+        }
+        ping_result.push("ping failed!".to_owned());
+    }
 
-#[tokio::test]
-async fn test_pinghost() {
-    let ret = ping_allhost(vec!["10.250.15.60"], Some(3)).await;
-    println!("test result is :{:?}", ret);
+    Ok(ping_result)
 }

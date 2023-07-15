@@ -1,18 +1,21 @@
 package com.bbclient.example_rustlib;
 
 public class RNetDiagnostics {
-    static {
+
+    public static void load() {
         System.loadLibrary("tracer_netdiagnostics");
+        init();
     }
-
-    //base test
+    /**
+     * ===============FFI=================
+     * */
+    //Params test
     public static native String greeting(final String pattern);
-
-    public static native void helloasync(IRNetCallback callback);
-
-    //NetDiagnostics
-
+    //Init android_logger
     public static native void init();
-
+    //Ping host
     public static native void ping(final String host,  IRNetCallback callback);
+    /**
+     * ===============FFI=================
+     * */
 }

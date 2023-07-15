@@ -1,7 +1,7 @@
 package com.bbclient.example_rustlib;
 
 public interface IRNetCallback {
-    void perNodeCallback(int cur);
-    void endCallback();
-    void pingsResult(String ret);
+    default void perNodeCallback(int cur){};
+    default void endCallback(){};
+    void pingResult(String ret);
 }

@@ -5,16 +5,14 @@ import shutil
 
 TARGET_LIB_NAME = "libtracer_netdiagnostics.so"
 
-
 def copy_libstatic(target_os: str = "android", target_arch="aarch64-linux-android"):
-
     print("copy lib...")
     cur_dir = os.path.curdir
     f_lib = os.path.join(cur_dir, "target", target_arch,
                          "release", TARGET_LIB_NAME)
 
     t_lib_par = "arm64-v8a" if target_arch == "aarch64-linux-android" else "armeabi-v7a"
-    t_lib = os.path.join(cur_dir, os.pardir, "proj_example",
+    t_lib = os.path.join(cur_dir, os.pardir, "example",
                          "app", "libs", t_lib_par, TARGET_LIB_NAME)
     shutil.copyfile(f_lib, t_lib)
     print("done!")
