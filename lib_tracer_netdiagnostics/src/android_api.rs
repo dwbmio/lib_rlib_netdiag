@@ -23,13 +23,13 @@ pub mod android {
     }
 
     #[no_mangle]
-    pub extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_init() {
+    pub extern "C" fn Java_com_bbclient_rlib_NetDiagnostics_init() {
         init_logger();
         info!("rust android_logger init suc!")
     }
 
     #[no_mangle]
-    pub unsafe extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_greeting<'local>(
+    pub unsafe extern "C" fn Java_com_bbclient_rlib_NetDiagnostics_greeting<'local>(
         mut env: JNIEnv<'local>,
         // this is the class that owns our static method. Not going to be used, but
         // still needs to have an argument slot
@@ -55,7 +55,7 @@ pub mod android {
      *
      */
     #[no_mangle]
-    pub extern "C" fn Java_com_bbclient_example_1rustlib_RNetDiagnostics_ping<'local>(
+    pub extern "C" fn Java_com_bbclient_rlib_NetDiagnostics_ping<'local>(
         mut env: JNIEnv<'local>,
         _class: JClass<'local>,
         ip: JString<'local>,
