@@ -1,6 +1,6 @@
-package com.bbclient.example_rustlib;
+package com.bbclient.rlib;
 
-public class RNetDiagnostics {
+public class NetDiagnostics {
 
     public static void load() {
         System.loadLibrary("tracer_netdiagnostics");

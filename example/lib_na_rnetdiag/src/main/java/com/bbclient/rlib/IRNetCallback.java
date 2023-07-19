@@ -1,4 +1,4 @@
-package com.bbclient.example_rustlib;
+package com.bbclient.rlib;
 
 public interface IRNetCallback {
     default void perNodeCallback(int cur){};
