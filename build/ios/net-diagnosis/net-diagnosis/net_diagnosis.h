@@ -1,8 +1,20 @@
-#ifndef __R_NETDIAG__
-#define __R_NETDIAG__
+#ifndef _R_NETDIAG__
+#define _R_NETDIAG__
 
-void r_netdiag_init(void);
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-const char* r_netdiag_ping(const char*);
+    //初始化logger
+    void r_netdiag_init(void);
+
+    //执行ping
+    const char* r_netdiag_ping(const char*);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
