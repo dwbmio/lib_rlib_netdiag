@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "example_rustlib"
 include ':app'
 include ':lib_na_rnetdiag'
+project(':lib_na_rnetdiag').projectDir = new File("../build/and_na_rnetdiag")
