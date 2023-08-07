@@ -3,7 +3,7 @@ extern crate log;
 
 pub mod android_api;
 pub mod ios_api;
-use log::{error};
+use log::error;
 use std::net::IpAddr;
 use std::{io, time::Duration};
 use surge_ping::{Client, IcmpPacket, PingIdentifier, PingSequence};

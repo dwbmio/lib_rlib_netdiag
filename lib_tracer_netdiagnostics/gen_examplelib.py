@@ -3,30 +3,36 @@ import os
 import sys
 import shutil
 
-TARGET_LIB_NAME = "libtracer_netdiagnostics.so"
+
 
 def gen_and_copy2_demo(target_os: str = "android", target_arch="aarch64-linux-android"):
     print("copy lib...")
     cur_dir = os.path.curdir
-    f_lib = os.path.join(cur_dir, "target", target_arch,
-                         "release", TARGET_LIB_NAME)
+    
     def _android():
+        TARGET_LIB_NAME = "libtracer_netdiagnostics.so"
         t_lib_par = "arm64-v8a" if target_arch == "aarch64-linux-android" else "armeabi-v7a"
-        t_lib = os.path.join(cur_dir, os.pardir, "example", "android",
+        f_lib = os.path.join(cur_dir, "target", target_arch,
+                         "release", TARGET_LIB_NAME)
+        t_lib = os.path.join(cur_dir, os.pardir, "build", "android", 
                          "app", "libs", t_lib_par, TARGET_LIB_NAME)
-        return t_lib
+        return (f_lib, t_lib)
 
 
     def _ios():
+        TARGET_LIB_NAME = "libtracer_netdiagnostics.a"
         t_lib_par = "aarch64-apple-ios"
-        t_lib = os.path.join(cur_dir, os.pardir, "example", "ios")
-        return t_lib
+        f_lib = os.path.join(cur_dir, "target", t_lib_par,
+                         "release", TARGET_LIB_NAME)
+        t_lib = os.path.join(cur_dir, os.pardir, "build", "ios", "net-diagnosis", TARGET_LIB_NAME)
+        return (f_lib, t_lib)
 
     tar_path = dict(
         android = _android, 
         ios = _ios
     )
-    shutil.copyfile(f_lib, tar_path[target_os]())
+    (f_lib, t_lib) = tar_path[target_os]()
+    shutil.copyfile(f_lib, t_lib)
     print("done!")
 
 
