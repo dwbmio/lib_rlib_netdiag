@@ -8,8 +8,7 @@ use std::net::IpAddr;
 use std::str::FromStr;
 use std::{io, time::Duration};
 use surge_ping::{Client, IcmpPacket, PingIdentifier, PingSequence};
-use thiserror::Error;
-use trust_dns_client::client::Client as AsyncClient;
+use trust_dns_client::client::SyncClient;
 use trust_dns_client::op::DnsResponse;
 use trust_dns_client::rr::{DNSClass, Name, RData, Record, RecordType};
 use trust_dns_client::udp::UdpClientConnection;
@@ -32,22 +31,15 @@ type NetDiaglistResult = Result<Vec<String>, NetDiagError>;
 ///domain查询远端ip
 /// ```
 /// use tokio::runtime::Runtime;
-///
-/// let rt = Runtime::new().unwrap();
-/// rt.block_on(aysnc {
-///     let ip = dns_ip("www.baidu.com").await;
+/// let ip = dns_ip("www.baidu.com");
 ///     
-/// });
-///
-///
-///
 /// ```
-async fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
+fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
     // Construct a new Resolver with default configuration options
     info!("dns domain <{}> start...", domain_addr);
     let address = "223.5.5.5:53".parse().unwrap();
     let conn = UdpClientConnection::new(address).unwrap();
-    let client = Client::new(conn);
+    let client = SyncClient::new(conn);
     let name = Name::from_str(domain_addr).unwrap();
     let response: DnsResponse =
         trust_dns_client::client::Client::query(&client, &name, DNSClass::IN, RecordType::A)?;
@@ -147,7 +139,7 @@ pub async fn ping_allhost(host_list: Vec<&str>, ping_tims: Option<u16>) -> NetDi
             Err(_e) => {
                 debug!("domain");
                 //try as dns like to get ip first.
-                let ip = dns_ip(h).await?;
+                let ip = dns_ip(h)?;
                 if let Some(ip_str) = ip {
                     trace!("lookup is value is {:?}", ip_str);
                     tasks.push(ping(
