@@ -8,7 +8,7 @@ use std::net::IpAddr;
 use std::{io, time::Duration};
 use surge_ping::{Client, IcmpPacket, PingIdentifier, PingSequence};
 use thiserror::Error;
-use trust_dns_resolver::config::*;
+use trust_dns_resolver::{config::*, Resolver};
 use trust_dns_resolver::TokioAsyncResolver;
 
 #[derive(Error, Debug)]
@@ -42,6 +42,11 @@ type NetDiaglistResult = Result<Vec<String>, NetDiagError>;
 async fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
     // Construct a new Resolver with default configuration options
     trace!("dns domain <{}> start...", domain_addr);
+
+
+    let (config, options) = super::system_conf::read_system_conf()?;
+    let resover= Resolver::from_system_conf();
+
     let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default())?;
     trace!("resolver suc!");
     let ip = resolver.lookup_ip(domain_addr).await?;
