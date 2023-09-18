@@ -4,17 +4,17 @@ extern crate log;
 pub mod android_api;
 pub mod ios_api;
 use log::error;
-use trust_dns_client::client::Client as AsyncClient;
-use trust_dns_client::udp::UdpClientConnection;
-use trust_dns_client::op::DnsResponse;
-use trust_dns_client::rr::{DNSClass, Name, RData, Record, RecordType};
 use std::net::IpAddr;
 use std::str::FromStr;
 use std::{io, time::Duration};
 use surge_ping::{Client, IcmpPacket, PingIdentifier, PingSequence};
 use thiserror::Error;
+use trust_dns_client::client::Client as AsyncClient;
+use trust_dns_client::op::DnsResponse;
+use trust_dns_client::rr::{DNSClass, Name, RData, Record, RecordType};
+use trust_dns_client::udp::UdpClientConnection;
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum NetDiagError {
     #[error("bind local io error!{0}")]
     BindError(#[from] io::Error),
@@ -23,7 +23,7 @@ pub enum NetDiagError {
     DnsSecError(#[from] trust_dns_client::error::ClientError),
 
     #[error("empty ip found!")]
-    IpDnsFailed(String)
+    IpDnsFailed(String),
 }
 
 type NetDiagResult = Result<String, NetDiagError>;
@@ -44,18 +44,21 @@ type NetDiaglistResult = Result<Vec<String>, NetDiagError>;
 /// ```
 async fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
     // Construct a new Resolver with default configuration options
-    info!("dns domain <{}> start...", domain_addr); 
+    info!("dns domain <{}> start...", domain_addr);
     let address = "223.5.5.5:53".parse().unwrap();
     let conn = UdpClientConnection::new(address).unwrap();
     let client = Client::new(conn);
     let name = Name::from_str(domain_addr).unwrap();
-    let response: DnsResponse = trust_dns_client::client::Client::query(&client, &name, DNSClass::IN, RecordType::A)?;
+    let response: DnsResponse =
+        trust_dns_client::client::Client::query(&client, &name, DNSClass::IN, RecordType::A)?;
     let answers: &[Record] = response.answers();
     if let Some(RData::A(ref ip)) = answers[0].data() {
         return Ok(Some(ip.to_string()));
     }
-    Err(NetDiagError::IpDnsFailed(format!("{} dnscli get ip is empty!", domain_addr)))
-    
+    Err(NetDiagError::IpDnsFailed(format!(
+        "{} dnscli get ip is empty!",
+        domain_addr
+    )))
 }
 
 // Ping an address $ping_tims times， and return output message（interval 1s）
