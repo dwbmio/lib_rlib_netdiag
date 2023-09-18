@@ -9,7 +9,7 @@ authors = ["bbclient"]
 
 [dependencies]
 surge-ping = "0.8.0"
-trust-dns-resolver = "0.22.0"
+trust-dns-client = "0.23.0"
 tokio = { version = "1.21.2", features = ["full"] }
 thiserror = "1"
 rand = "0.8.5"

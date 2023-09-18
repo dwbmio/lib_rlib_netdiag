@@ -14,21 +14,25 @@
 		9D4BB6352A67D70E00EC393A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9D4BB6332A67D70E00EC393A /* LaunchScreen.storyboard */; };
 		9D4BB6382A67D70E00EC393A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9D4BB6372A67D70E00EC393A /* main.m */; };
 		9D4BB64A2A680D3600EC393A /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9D4BB6492A680D3600EC393A /* ViewController.mm */; };
-		9D57279E2A6E78A300E9DB81 /* lib_netdiagnosis.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D57279D2A6E78A300E9DB81 /* lib_netdiagnosis.framework */; };
+		9D618C712AB85062000C8F70 /* lib_netdiagnosis.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D618C662AB844EB000C8F70 /* lib_netdiagnosis.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		9D57279B2A6E75DE00E9DB81 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
+/* Begin PBXContainerItemProxy section */
+		9D618C652AB844EB000C8F70 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9D618C602AB844EB000C8F70 /* lib-netdiagnosis.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9DB0425E2A6A7452005D8DB1;
+			remoteInfo = "lib-netdiagnosis";
 		};
-/* End PBXCopyFilesBuildPhase section */
+		9D618C672AB844EB000C8F70 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9D618C602AB844EB000C8F70 /* lib-netdiagnosis.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9D5727A32A6E7B1900E9DB81;
+			remoteInfo = lib_netdiagnosisTests;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		9D4BB6232A67D70D00EC393A /* netdiag-oc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "netdiag-oc.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -44,6 +48,7 @@
 		9D4BB6372A67D70E00EC393A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		9D4BB6492A680D3600EC393A /* ViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		9D57279D2A6E78A300E9DB81 /* lib_netdiagnosis.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = lib_netdiagnosis.framework; sourceTree = "<group>"; };
+		9D618C602AB844EB000C8F70 /* lib-netdiagnosis.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "lib-netdiagnosis.xcodeproj"; path = "../../build/ios/net-diagnosis/lib-netdiagnosis.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9D57279E2A6E78A300E9DB81 /* lib_netdiagnosis.framework in Frameworks */,
+				9D618C712AB85062000C8F70 /* lib_netdiagnosis.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,6 +66,7 @@
 		9D4BB5F52A66645000EC393A = {
 			isa = PBXGroup;
 			children = (
+				9D618C602AB844EB000C8F70 /* lib-netdiagnosis.xcodeproj */,
 				9D4BB6242A67D70D00EC393A /* netdiag-oc */,
 				9D4BB5FF2A66645000EC393A /* Products */,
 				9D4BB60A2A67922300EC393A /* Frameworks */,
@@ -101,6 +107,15 @@
 			path = "netdiag-oc";
 			sourceTree = "<group>";
 		};
+		9D618C612AB844EB000C8F70 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9D618C662AB844EB000C8F70 /* lib_netdiagnosis.framework */,
+				9D618C682AB844EB000C8F70 /* lib_netdiagnosisTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -111,7 +126,6 @@
 				9D4BB61F2A67D70D00EC393A /* Sources */,
 				9D4BB6202A67D70D00EC393A /* Frameworks */,
 				9D4BB6212A67D70D00EC393A /* Resources */,
-				9D57279B2A6E75DE00E9DB81 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -151,12 +165,35 @@
 			mainGroup = 9D4BB5F52A66645000EC393A;
 			productRefGroup = 9D4BB5FF2A66645000EC393A /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 9D618C612AB844EB000C8F70 /* Products */;
+					ProjectRef = 9D618C602AB844EB000C8F70 /* lib-netdiagnosis.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				9D4BB6222A67D70D00EC393A /* netdiag-oc */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		9D618C662AB844EB000C8F70 /* lib_netdiagnosis.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = lib_netdiagnosis.framework;
+			remoteRef = 9D618C652AB844EB000C8F70 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		9D618C682AB844EB000C8F70 /* lib_netdiagnosisTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = lib_netdiagnosisTests.xctest;
+			remoteRef = 9D618C672AB844EB000C8F70 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		9D4BB6212A67D70D00EC393A /* Resources */ = {
@@ -325,10 +362,10 @@
 				DEVELOPMENT_TEAM = 2YEYYJX2ER;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/netdiag-oc",
+					"$(PROJECT_DIR)/netdiag-oc/../../build/ios/net-diagnosis",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/netdiag-oc/../../build/ios/net-diagnosis";
 				INFOPLIST_FILE = "netdiag-oc/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -359,10 +396,10 @@
 				DEVELOPMENT_TEAM = 2YEYYJX2ER;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/netdiag-oc",
+					"$(PROJECT_DIR)/netdiag-oc/../../build/ios/net-diagnosis",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/netdiag-oc/../../build/ios/net-diagnosis";
 				INFOPLIST_FILE = "netdiag-oc/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;

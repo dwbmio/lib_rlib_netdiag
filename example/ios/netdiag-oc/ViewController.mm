@@ -7,7 +7,7 @@
 
 #import "ViewController.h"
 #import <UIKit/UIKit.h>
-#import <lib_netdiagnosis/net_diagnosis.h>
+#import "net_diagnosis.h"
 
 @interface ViewController ()
 
