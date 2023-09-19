@@ -7,11 +7,13 @@ use log::error;
 use std::net::IpAddr;
 use std::str::FromStr;
 use std::{io, time::Duration};
+use tokio::net::TcpStream as TokioTcpStream;
 use surge_ping::{Client, IcmpPacket, PingIdentifier, PingSequence};
-use trust_dns_client::client::SyncClient;
-use trust_dns_client::op::DnsResponse;
-use trust_dns_client::rr::{DNSClass, Name, RData, Record, RecordType};
-use trust_dns_client::udp::UdpClientConnection;
+use trust_dns_client::client::{AsyncClient, ClientHandle};
+use trust_dns_client::rr::{DNSClass, Name, RData, RecordType};
+use trust_dns_client::proto::iocompat::AsyncIoTokioAsStd;
+use trust_dns_client::tcp::TcpClientStream;
+
 
 #[derive(thiserror::Error, Debug)]
 pub enum NetDiagError {
@@ -34,18 +36,27 @@ type NetDiaglistResult = Result<Vec<String>, NetDiagError>;
 /// let ip = dns_ip("www.baidu.com");
 ///     
 /// ```
-fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
+async fn dns_ip(domain_addr: &str) -> Result<Option<String>, NetDiagError> {
     // Construct a new Resolver with default configuration options
     info!("dns domain <{}> start...", domain_addr);
-    let address = "223.5.5.5:53".parse().unwrap();
-    let conn = UdpClientConnection::new(address).unwrap();
-    let client = SyncClient::new(conn);
-    let name = Name::from_str(domain_addr).unwrap();
-    let response: DnsResponse =
-        trust_dns_client::client::Client::query(&client, &name, DNSClass::IN, RecordType::A)?;
-    let answers: &[Record] = response.answers();
-    if let Some(RData::A(ref ip)) = answers[0].data() {
-        return Ok(Some(ip.to_string()));
+    let ali_dns = ([223,5,5,5], 53);
+    // let _google_dns = ([1,1,1,1], 53);
+    let (stream, sender) =
+    TcpClientStream::<AsyncIoTokioAsStd<TokioTcpStream>>::new(ali_dns.into());
+    let client = AsyncClient::new(stream, sender, None);
+    let (mut client, bg) = client.await.expect("connection failed");
+    tokio::spawn(bg);
+    // Create a query future
+    let query = client.query(
+        Name::from_str(domain_addr).unwrap(),
+        DNSClass::IN,
+        RecordType::A,
+    );
+    // wait for its response
+    let (message_returned, _) = query.await.unwrap().into_parts();
+    // validate it's what we expected
+    if let Some(RData::A(addr)) = message_returned.answers()[0].data() {
+        return Ok(Some(addr.to_string()));
     }
     Err(NetDiagError::IpDnsFailed(format!(
         "{} dnscli get ip is empty!",
@@ -139,7 +150,7 @@ pub async fn ping_allhost(host_list: Vec<&str>, ping_tims: Option<u16>) -> NetDi
             Err(_e) => {
                 debug!("domain");
                 //try as dns like to get ip first.
-                let ip = dns_ip(h)?;
+                let ip = dns_ip(h).await?;
                 if let Some(ip_str) = ip {
                     trace!("lookup is value is {:?}", ip_str);
                     tasks.push(ping(
