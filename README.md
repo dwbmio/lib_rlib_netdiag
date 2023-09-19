@@ -50,5 +50,3 @@ And add the dependenceise.
 * iOS\
 1.Info.plist网络权限 
 
-
-Step2.
